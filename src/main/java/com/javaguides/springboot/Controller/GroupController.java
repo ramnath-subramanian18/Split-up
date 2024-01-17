@@ -51,16 +51,15 @@ public class GroupController {
 //        groupNameResult.put("Result", groupNames);
 //        return groupNameResult;
 //    }
-    @GetMapping("/groups/{userID}")
+    @GetMapping("/groups")
     @ResponseBody
-    public List displayGroup(@PathVariable String userID) {
+
+    public List displayGroup(@RequestParam String userID ) {
         System.out.println(userID);
         User user=(userRepository.findById(userID).get());
-        List<String> allGroup = new ArrayList<>();
+        List<Object> allGroup = new ArrayList<>();
         for (Object i:user.getUserGroup()){
-            Group groupUser=(groupRepository.findById(i.toString()).get());
-            allGroup.add(groupUser.toString());
-            System.out.println(allGroup);
+            allGroup.add(groupRepository.findById(i.toString()).get());
         }
         return allGroup;
     }
