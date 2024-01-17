@@ -51,7 +51,7 @@ public class GroupController {
 //        groupNameResult.put("Result", groupNames);
 //        return groupNameResult;
 //    }
-    @GetMapping("/group/{userID}")
+    @GetMapping("/groups/{userID}")
     @ResponseBody
     public List displayGroup(@PathVariable String userID) {
         System.out.println(userID);
