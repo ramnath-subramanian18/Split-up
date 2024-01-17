@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 
 public class UserController {
@@ -26,14 +29,17 @@ public class UserController {
         return user;
     }
     @PostMapping(value="/signin",consumes = MediaType.APPLICATION_JSON_VALUE,produces = MediaType.APPLICATION_JSON_VALUE)
-    public JsonObject loginuser(@RequestBody User user){
+    public Object loginuser(@RequestBody User user){
         System.out.println("inside the login function");
-        if(user.getUserPassword().equals(userRepository.findByuserEmail(user.getUserEmail()).getUserPassword())){
-            return new JsonObject("{'Result':'True'}");
+        try {
+            if (user.getUserPassword().equals(userRepository.findByuserEmail(user.getUserEmail()).getUserPassword())) {
+                return userRepository.findByuserEmail(user.getUserEmail());
+            } else {
+                return false;
+            }
         }
-        else{
-            return new JsonObject("{'Result':'False'}");
+        catch(Exception e) {
+            return false;
         }
-
     }
 }

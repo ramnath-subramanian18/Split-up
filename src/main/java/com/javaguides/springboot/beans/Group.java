@@ -17,7 +17,6 @@ public class Group {
     private String _id;
     private String groupName;
     private ArrayList userAmount;
-
     private String groupOwner;
     private String groupDescription;
 
@@ -31,7 +30,6 @@ public class Group {
                 ", groupDescription='" + groupDescription + '\'' +
                 '}';
     }
-
     public Group() {
     }
 
@@ -42,15 +40,4 @@ public class Group {
         this.groupDescription=groupDescription;
         this.userAmount=userAmount;
     }
-
-//    @Override
-//    public String toString() {
-//        return "Group{" +
-//                "id='" + _id + '\'' +
-//                ", groupName='" + groupName + '\'' +
-//                ", groupOwner='" + groupOwner + '\'' +
-//                ", groupDescription='" + groupDescription + '\'' +
-//                ", usersAmount=" + usersAmount +
-//                '}';
-//    }
 }

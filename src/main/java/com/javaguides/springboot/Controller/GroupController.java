@@ -8,6 +8,7 @@ import org.bson.json.JsonObject;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
@@ -52,15 +53,16 @@ public class GroupController {
 //    }
     @GetMapping("/group/{userID}")
     @ResponseBody
-    public String displayGroup(@PathVariable String userID) {
+    public List displayGroup(@PathVariable String userID) {
         System.out.println(userID);
         User user=(userRepository.findById(userID).get());
-        System.out.println(user);
-
+        List<String> allGroup = new ArrayList<>();
         for (Object i:user.getUserGroup()){
-            System.out.println(groupRepository.findById(i.toString()));
+            Group groupUser=(groupRepository.findById(i.toString()).get());
+            allGroup.add(groupUser.toString());
+            System.out.println(allGroup);
         }
-        return "Success";
+        return allGroup;
     }
 }
 
