@@ -4,27 +4,37 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 @Setter
 @Getter
 @ToString
 public class Transaction {
+    private String groupID;
     private String transactionName;
     private float transactionAmount;
-    private Timestamp transactionDate;
-    private String transactionPayee;
-    private List<UserSplit> users;
-
+    private String transactionPayeeID;
+    private List userSplit;
+    private String transactionDescription;
+    private String _id;
     private Transaction() {
     }
-
-    public Transaction(String transactionName, float transactionAmount, Timestamp transactionDate, String transactionPayee, List users) {
-        this.transactionAmount = transactionAmount;
+    Timestamp transactionDate = Timestamp.valueOf(LocalDate.now().atStartOfDay());
+    int transactionStatus=1;
+    Timestamp transactionUpdateDate=Timestamp.valueOf(LocalDate.now().atStartOfDay());
+    public Transaction(String groupID,String transactionName, float transactionAmount, Timestamp transactionDate, String transactionPayee, List userSplit,String transactionDescription,Timestamp transactionUpdateDate,int transactionStatus) {
+        this.groupID=groupID;
         this.transactionName = transactionName;
-        this.transactionDate = transactionDate;
-        this.transactionPayee = transactionPayee;
-        this.users = users;
+        this.transactionAmount = transactionAmount;
+        this.transactionDate= transactionDate;
+        this.transactionPayeeID=transactionPayee;
+        this.userSplit = userSplit;
+        this.transactionDescription=transactionDescription;
+        this.transactionUpdateDate=transactionUpdateDate;
+        this.transactionStatus=transactionStatus;
     }
 }

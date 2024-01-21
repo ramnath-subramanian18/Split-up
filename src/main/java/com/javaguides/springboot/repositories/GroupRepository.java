@@ -9,11 +9,8 @@ import java.util.List;
 
 @Repository
 public interface GroupRepository extends MongoRepository<Group, String> {
-//    Group findByuserGroup(String userID);
-//Group findByUsersAmount(String userEmail);
-//Group findBygroupNameanduserID(String groupName, String userID);
 
-//List<Group> findByUserGroupAndUsersAmount(String userId, int usersAmount);
+//    Group upsert(String _id,Group group);
 
 }
 
