@@ -16,7 +16,7 @@ public class Group {
     @Id
     private String _id;
     private String groupName;
-    private ArrayList userAmount;
+    private ArrayList<userAmount> userAmounts;
     private String groupOwner;
     private String groupDescription;
 
@@ -25,7 +25,7 @@ public class Group {
         return "Group{" +
                 "_id='" + _id + '\'' +
                 ", groupName='" + groupName + '\'' +
-                ", userAmount=" + userAmount +
+                ", userAmounts=" + userAmounts +
                 ", groupOwner='" + groupOwner + '\'' +
                 ", groupDescription='" + groupDescription + '\'' +
                 '}';
@@ -33,11 +33,11 @@ public class Group {
     public Group() {
     }
 
-    public Group( String _id, String groupName, String groupOwner,String groupDescription,ArrayList userAmount){
+    public Group( String _id, String groupName, String groupOwner,String groupDescription,ArrayList<userAmount> userAmounts){
         this._id=_id;
         this.groupName=groupName;
         this.groupOwner=groupOwner;
         this.groupDescription=groupDescription;
-        this.userAmount=userAmount;
+        this.userAmounts = userAmounts;
     }
 }

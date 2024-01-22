@@ -1,12 +1,15 @@
 package com.javaguides.springboot.Controller;
 import com.javaguides.springboot.beans.Transaction;
+import com.javaguides.springboot.beans.User;
 import com.javaguides.springboot.repositories.GroupRepository;
 import com.javaguides.springboot.repositories.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 public class TransactionController {
@@ -14,7 +17,6 @@ public class TransactionController {
     private TransactionRepository transactionRepository;
     @Autowired
     private GroupRepository groupRepository;
-
     @GetMapping("/health")
     public String health() {
         System.out.println("Ok");
@@ -27,15 +29,20 @@ public class TransactionController {
         transactionRepository.save(transaction);
         return transaction;
         }
-        //display all the transaction for given group
+        //display all the details for given transactionID
     @GetMapping("/transactions")
     @ResponseBody
-    public List transaction(@RequestParam String groupID ){
-        List <Object> totalgroup=new ArrayList<>();
-        System.out.println(groupID);
-        totalgroup.add(groupRepository.findById(groupID));
-        System.out.println(groupRepository.findById(groupID));
-        return totalgroup;
+    public Optional<Transaction> getTransaction(@RequestParam String transactionID ){
+        System.out.println(transactionID);
+        System.out.println(transactionRepository.findById(transactionID));
+        return transactionRepository.findById(transactionID);
     }
+    //Display the transactions for given group ID
 
+    @GetMapping("/transactions/{groupID}")
+    @ResponseBody
+    public List<Transaction>getTransactionGroup(@PathVariable String groupID){
+        return transactionRepository.findByGroupID(groupID);
+
+    }
 }

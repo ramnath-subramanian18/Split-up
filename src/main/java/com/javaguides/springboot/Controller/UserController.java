@@ -25,6 +25,7 @@ public class UserController {
         System.out.println(user.getUserName());
         System.out.println(user.getUserPassword());
         System.out.println(user.getUserEmail());
+//        user.setUserGroup(null);
         userRepository.save(user);
         return user;
     }

@@ -1,16 +1,11 @@
 package com.javaguides.springboot.Controller;
 import com.javaguides.springboot.beans.Group;
 import com.javaguides.springboot.beans.User;
+import com.javaguides.springboot.beans.userAmount;
 import com.javaguides.springboot.repositories.GroupRepository;
 import com.javaguides.springboot.repositories.UserRepository;
-import com.mongodb.client.model.UpdateOptions;
-import com.mongodb.client.result.UpdateResult;
-import com.mongodb.internal.bulk.UpdateRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
@@ -37,25 +32,64 @@ public class GroupController {
     @PutMapping(value = "/groups", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public String editGroup(@RequestBody Map<String, String> requestBody) {
         System.out.println("Request Body: " + requestBody.get("userEmail"));
-        User user=userRepository.findByuserEmail(requestBody.get("userEmail"));
-        String userId=user.get_id().toString();
-        String userBalance="0";
-        ArrayList<Map<String, Object>> userAmountBeforeAppending = groupRepository.findById(requestBody.get("groupID")).get().getUserAmount();
-        System.out.println(userAmountBeforeAppending);
-        Map<String, Object> newUserEntry = new HashMap<>();
-        newUserEntry.put("userID", userId);
-        newUserEntry.put("userBalance", userBalance);
-        userAmountBeforeAppending.add(newUserEntry);
-        System.out.println(userAmountBeforeAppending);
-        Query query=new Query().addCriteria(Criteria.where("_id").is(requestBody.get("groupID")));
-        Update updateDefinition = new Update().set("userAmount", userAmountBeforeAppending);
-        UpdateResult updateresult= mongoTemplate.upsert(query,updateDefinition,"group");
-        ArrayList<String> userGroup = user.getUserGroup();
-        userGroup.add(requestBody.get("groupID"));
-        user.setUserGroup(userGroup);
-        userRepository.save(user);
-        System.out.println(userGroup);
+        User user = userRepository.findByuserEmail(requestBody.get("userEmail"));
+        String userId = user.get_id().toString();
+        Float userBalance = 0.1F;
+
+        Optional<Group> optionalGroup = groupRepository.findById(requestBody.get("groupID"));
+
+        if (optionalGroup.isPresent()) {
+            Group group = optionalGroup.get();
+            ArrayList<userAmount> userAmountBeforeAppending = new ArrayList<>(group.getUserAmounts());
+            userAmountBeforeAppending.add(new userAmount(userId, userBalance));
+            group.setUserAmounts(userAmountBeforeAppending);
+            groupRepository.save(group);
+        } else {
+            System.out.println("Group not found with ID: " + requestBody.get("groupID"));
+        }
+
+        System.out.println(user);
+        if(user.getUserGroup()==null)
+        {
+            System.out.println("null");
+            ArrayList<String> userGroup= new ArrayList<>();;
+            userGroup.add(requestBody.get("groupID"));
+            user.setUserGroup(userGroup);
+            userRepository.save(user);
+            System.out.println(userGroup);
+        }
+        else {
+            ArrayList<String> userGroup = user.getUserGroup();
+            userGroup.add(requestBody.get("groupID"));
+            user.setUserGroup(userGroup);
+            userRepository.save(user);
+            System.out.println(userGroup);
+        }
+
         return "Done";
+    }
+
+    //list the group details based on group id
+
+    @GetMapping("/groups/userID/{groupID}")
+    @ResponseBody
+    public Optional<Group> listGroup(@PathVariable String groupID ){
+        System.out.println(groupRepository.findById(groupID));
+        return groupRepository.findById(groupID);
+    }
+
+    //Display all groups for given user ID
+    @GetMapping("/groups/{userID}")
+    @ResponseBody
+
+    public List<Object> displayGroup(@PathVariable String userID) {
+        System.out.println(userID);
+        User user=(userRepository.findById(userID).get());
+        List<Object> allGroup = new ArrayList<>();
+        for (Object i:user.getUserGroup()){
+            allGroup.add(groupRepository.findById(i.toString()).get());
+        }
+        return allGroup;
     }
 
 
@@ -83,20 +117,6 @@ public class GroupController {
 //        groupNameResult.put("Result", groupNames);
 //        return groupNameResult;
 //    }
-
-    //Display all groups for given user ID
-    @GetMapping("/groups")
-    @ResponseBody
-
-    public List displayGroup(@RequestParam String userID ) {
-        System.out.println(userID);
-        User user=(userRepository.findById(userID).get());
-        List<Object> allGroup = new ArrayList<>();
-        for (Object i:user.getUserGroup()){
-            allGroup.add(groupRepository.findById(i.toString()).get());
-        }
-        return allGroup;
-    }
 }
 
 

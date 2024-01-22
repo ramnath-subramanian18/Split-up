@@ -18,7 +18,7 @@ public class User {
     private String userName;
     private String userEmail;
     private String userPassword;
-    private ArrayList userGroup;
+    private ArrayList<String> userGroup;
 
 
     //private int id;
@@ -36,7 +36,7 @@ public class User {
                 '}';
     }
 
-    public User(String userName, String userEmail, String userPassword, ArrayList userGroup) {
+    public User(String userName, String userEmail, String userPassword, ArrayList<String> userGroup) {
         this.userName = userName;
         this.userEmail = userEmail;
         this.userPassword = userPassword;
