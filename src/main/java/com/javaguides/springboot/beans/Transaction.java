@@ -3,11 +3,7 @@ package com.javaguides.springboot.beans;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-
-import java.sql.Time;
 import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +15,7 @@ public class Transaction {
     private String transactionName;
     private float transactionAmount;
     private String transactionPayeeID;
-    private ArrayList<userAmount> userSplit;
+    private List<Useramount> userSplit;
     private String transactionDescription;
     private String _id;
     private Transaction() {
@@ -27,7 +23,7 @@ public class Transaction {
 //    Timestamp transactionDate = Timestamp.valueOf(LocalDate.now().atStartOfDay());
     int transactionStatus=1;
 //    Timestamp transactionUpdateDate=Timestamp.valueOf(LocalDate.now().atStartOfDay());
-    public Transaction(String groupID,String transactionName, float transactionAmount, Timestamp transactionDate, String transactionPayee, ArrayList<userAmount> userSplit,String transactionDescription,Timestamp transactionUpdateDate,int transactionStatus) {
+    public Transaction(String groupID, String transactionName, float transactionAmount, Timestamp transactionDate, String transactionPayee, ArrayList<Useramount> userSplit, String transactionDescription, Timestamp transactionUpdateDate, int transactionStatus) {
         this.groupID=groupID;
         this.transactionName = transactionName;
         this.transactionAmount = transactionAmount;

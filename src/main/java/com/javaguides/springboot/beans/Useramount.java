@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Setter
 @Getter
-public class userAmount {
+public class Useramount {
     private String userID;
     private Float userBalance;
 
@@ -14,11 +14,12 @@ public class userAmount {
         return "userAmount{" +
                 "userID='" + userID + '\'' +
                 ", userBalance=" + userBalance +
+
                 '}';
     }
 
-    public userAmount(){}
-    public userAmount(String userID,Float userBalance){
+    public Useramount(){}
+    public Useramount(String userID, Float userBalance){
         this.userID=userID;
         this.userBalance=userBalance;
     }

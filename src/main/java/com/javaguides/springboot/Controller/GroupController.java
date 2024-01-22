@@ -1,7 +1,7 @@
 package com.javaguides.springboot.Controller;
 import com.javaguides.springboot.beans.Group;
 import com.javaguides.springboot.beans.User;
-import com.javaguides.springboot.beans.userAmount;
+import com.javaguides.springboot.beans.Useramount;
 import com.javaguides.springboot.repositories.GroupRepository;
 import com.javaguides.springboot.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,9 +40,9 @@ public class GroupController {
 
         if (optionalGroup.isPresent()) {
             Group group = optionalGroup.get();
-            ArrayList<userAmount> userAmountBeforeAppending = new ArrayList<>(group.getUserAmounts());
-            userAmountBeforeAppending.add(new userAmount(userId, userBalance));
-            group.setUserAmounts(userAmountBeforeAppending);
+            ArrayList<Useramount> useramountBeforeAppending = new ArrayList<>(group.getUserAmounts());
+            useramountBeforeAppending.add(new Useramount(userId, userBalance));
+            group.setUserAmounts(useramountBeforeAppending);
             groupRepository.save(group);
         } else {
             System.out.println("Group not found with ID: " + requestBody.get("groupID"));
@@ -52,14 +52,14 @@ public class GroupController {
         if(user.getUserGroup()==null)
         {
             System.out.println("null");
-            ArrayList<String> userGroup= new ArrayList<>();;
+            List<String> userGroup= new ArrayList<>();;
             userGroup.add(requestBody.get("groupID"));
             user.setUserGroup(userGroup);
             userRepository.save(user);
             System.out.println(userGroup);
         }
         else {
-            ArrayList<String> userGroup = user.getUserGroup();
+            List<String> userGroup = user.getUserGroup();
             userGroup.add(requestBody.get("groupID"));
             user.setUserGroup(userGroup);
             userRepository.save(user);

@@ -18,7 +18,7 @@ public class User {
     private String userName;
     private String userEmail;
     private String userPassword;
-    private ArrayList<String> userGroup;
+    private List<String> userGroup;
 
 
     //private int id;

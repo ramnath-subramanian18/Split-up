@@ -6,8 +6,6 @@ import com.javaguides.springboot.repositories.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,19 +28,17 @@ public class TransactionController {
         return transaction;
         }
         //display all the details for given transactionID
-    @GetMapping("/transactions")
+    @GetMapping("/transactions/{transactionID}")
     @ResponseBody
-    public Optional<Transaction> getTransaction(@RequestParam String transactionID ){
+    public Optional<Transaction> getTransaction(@PathVariable String transactionID ){
         System.out.println(transactionID);
         System.out.println(transactionRepository.findById(transactionID));
         return transactionRepository.findById(transactionID);
     }
     //Display the transactions for given group ID
-
-    @GetMapping("/transactions/{groupID}")
+    @GetMapping("/transactions1/{groupID}")
     @ResponseBody
     public List<Transaction>getTransactionGroup(@PathVariable String groupID){
-        return transactionRepository.findByGroupID(groupID);
-
+        return transactionRepository.findBygroup(groupID);
     }
 }
