@@ -19,6 +19,7 @@ public class User {
     private String userEmail;
     private String userPassword;
     private List<String> userGroup;
+    public String stringValue;
 
 
     //private int id;
@@ -41,6 +42,9 @@ public class User {
         this.userEmail = userEmail;
         this.userPassword = userPassword;
         this.userGroup=userGroup;
+    }
+    public User(String value){
+        this.stringValue=value;
     }
 
 

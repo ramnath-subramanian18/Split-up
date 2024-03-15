@@ -1,7 +1,12 @@
 package com.javaguides.springboot.beans;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Setter
 @Getter
@@ -23,6 +28,5 @@ public class Useramount {
         this.userID=userID;
         this.userBalance=userBalance;
     }
-
 
 }

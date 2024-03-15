@@ -22,29 +22,40 @@ public class UserController {
     @Autowired
     private GroupRepository groupRepository;
 
+
+    @CrossOrigin
     @PostMapping(value = "/users", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public User createuser(@RequestBody User user) {
-        System.out.println("Creating new user");
-        System.out.println(user.getUserName());
-        System.out.println(user.getUserPassword());
-        System.out.println(user.getUserEmail());
+        System.out.println(userRepository.findByuserEmail(user.getUserEmail()));
+        if(userRepository.findByuserEmail(user.getUserEmail())==null) {
+            System.out.println("Creating new user");
 //        user.setUserGroup(null);
-        userRepository.save(user);
-        return user;
+            userRepository.save(user);
+            return user;
+        }
+        else {
+            System.out.println("into this");
+            return new User("user exists");
+        }
     }
+    @CrossOrigin
     @PostMapping(value="/signin",consumes = MediaType.APPLICATION_JSON_VALUE,produces = MediaType.APPLICATION_JSON_VALUE)
     public Object loginuser(@RequestBody User user){
-        System.out.println("inside the login function");
-        try {
-            if (user.getUserPassword().equals(userRepository.findByuserEmail(user.getUserEmail()).getUserPassword())) {
-                return userRepository.findByuserEmail(user.getUserEmail());
-            } else {
-                return false;
-            }
-        }
-        catch(Exception e) {
-            return false;
-        }
+        System.out.println("indise logn");
+        return user;
+//        try {
+//            if (user.getUserPassword().equals(userRepository.findByuserEmail(user.getUserEmail()).getUserPassword())) {
+////                String token = JwtUtil.generateToken(user.getUserEmail());
+////                System.out.println("token");
+////                System.out.println(token);
+//                return userRepository.findByuserEmail(user.getUserEmail());
+//            } else {
+//                return false;
+//            }
+//        }
+//        catch(Exception e) {
+//            return false;
+//        }
     }
 
 

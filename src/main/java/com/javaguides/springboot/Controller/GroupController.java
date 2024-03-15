@@ -9,6 +9,10 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+//import com.javaguides.springboot.beans.UserAmount;
+
+//import static jdk.nio.zipfs.ZipFileAttributeView.AttrID.group;
 
 @RestController
 public class GroupController {
@@ -18,13 +22,29 @@ public class GroupController {
     private UserRepository userRepository;
     @Autowired
     private MongoTemplate mongoTemplate;
-
+    //Create a group
+    @CrossOrigin
     @PostMapping(value = "/groups", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public Group createGroup(@RequestBody Group group) {
+//        List<String> userGroup = new List<String>();
         System.out.println("Create a group");
         System.out.println(group.toString());
         // TODO:: set owner to the user creating the group, read from the token
         groupRepository.save(group);
+        String groupID = group.get_id();
+        System.out.println(groupID);
+        String userID=group.getUserAmounts().get(0).getUserID();
+        System.out.println(userID);
+        Optional<User> userOptional = userRepository.findById(userID);
+
+        if (userOptional.isPresent()) {
+            System.out.println("into this");
+            User user = userOptional.get();
+            List<String> userGroup = user.getUserGroup();
+            userGroup.add(groupID);
+            userRepository.save(user);
+        }
+
         return group;
     }
     //Put request to add a user to a group
@@ -70,26 +90,57 @@ public class GroupController {
     }
 
     //list the group details based on group id
-
+    @CrossOrigin
     @GetMapping("/groups/userID/{groupID}")
     @ResponseBody
-    public Optional<Group> listGroup(@PathVariable String groupID ){
-        System.out.println(groupRepository.findById(groupID));
-        return groupRepository.findById(groupID);
+    public HashMap listGroup(@PathVariable String groupID ){
+        Optional<Group> group=groupRepository.findById(groupID);
+        HashMap allDetailsGroup = new HashMap();
+        List<HashMap<String ,String>> allUserAmountsName = new ArrayList<HashMap<String ,String>>();
+//        System.out.println(group.get().getUserAmounts());
+        for (Useramount eachUserBalance:group.get().getUserAmounts()){
+            String userName=(userRepository.findById(eachUserBalance.getUserID()).get().getUserName());
+            HashMap userAmountsName = new HashMap();
+            userAmountsName.put("userID",eachUserBalance.getUserID());
+            userAmountsName.put("userBalance",eachUserBalance.getUserBalance());
+            userAmountsName.put("userName",userName);
+            allUserAmountsName.add(userAmountsName);
+        }
+        allDetailsGroup.put("_id",group.get().getGroupName());
+        allDetailsGroup.put("groupName",group.get().getGroupName());
+        allDetailsGroup.put("userAmounts",allUserAmountsName);
+        allDetailsGroup.put("groupOwner",group.get().getGroupOwner());
+        allDetailsGroup.put("groupDescription",group.get().getGroupOwner());
+        System.out.println(allDetailsGroup);
+//        System.out.println(groupRepository.findById(groupID));
+//        return groupRepository.findById(groupID);
+        return allDetailsGroup;
     }
+
 
     //Display all groups for given user ID
     @GetMapping("/groups/{userID}")
     @ResponseBody
 
     public List<Object> displayGroup(@PathVariable String userID) {
+
         System.out.println(userID);
         User user=(userRepository.findById(userID).get());
-        List<Object> allGroup = new ArrayList<>();
-        for (Object i:user.getUserGroup()){
-            allGroup.add(groupRepository.findById(i.toString()).get());
+        System.out.println(user);
+        List<Object> allGroupUser = new ArrayList<>();
+        System.out.println(groupRepository.findByuserAmounts(userID));
+        for (Group i:groupRepository.findByuserAmounts(userID)) {
+            Map<String, String> singleGroupUser = new HashMap<>();
+            singleGroupUser.put("name", i.getGroupName());
+            singleGroupUser.put("id", i.get_id());
+            for (Useramount userAmount : i.getUserAmounts()) {
+                if (userID.equals(userAmount.getUserID())) {
+                    singleGroupUser.put("balance", userAmount.getUserBalance().toString());
+                }
+            }
+            allGroupUser.add(singleGroupUser);
         }
-        return allGroup;
+        return allGroupUser;
     }
 
 

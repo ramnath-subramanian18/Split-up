@@ -12,4 +12,8 @@ import java.util.List;
 public interface TransactionRepository extends MongoRepository<Transaction, String>{
     @Query("{'groupID': ?0}")
     List<Transaction> findBygroup(String id);
+    @Query("{'groupID':?0,'transactionStatus':1}")
+    List<Transaction> findBygroupTransactionStatus(String id);
+
+
 }

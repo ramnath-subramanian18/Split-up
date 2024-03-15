@@ -18,12 +18,15 @@ public class Transaction {
     private List<Useramount> userSplit;
     private String transactionDescription;
     private String _id;
+
+
+    private String splitType;
     private Transaction() {
     }
 //    Timestamp transactionDate = Timestamp.valueOf(LocalDate.now().atStartOfDay());
     int transactionStatus=1;
 //    Timestamp transactionUpdateDate=Timestamp.valueOf(LocalDate.now().atStartOfDay());
-    public Transaction(String groupID, String transactionName, float transactionAmount, Timestamp transactionDate, String transactionPayee, ArrayList<Useramount> userSplit, String transactionDescription, Timestamp transactionUpdateDate, int transactionStatus) {
+    public Transaction(String splitType, String groupID, String transactionName, float transactionAmount, Timestamp transactionDate, String transactionPayee, ArrayList<Useramount> userSplit, String transactionDescription, Timestamp transactionUpdateDate, int transactionStatus) {
         this.groupID=groupID;
         this.transactionName = transactionName;
         this.transactionAmount = transactionAmount;
@@ -33,5 +36,6 @@ public class Transaction {
         this.transactionDescription=transactionDescription;
 //        this.transactionUpdateDate=transactionUpdateDate;
         this.transactionStatus=transactionStatus;
+        this.splitType=splitType;
     }
 }
