@@ -6,7 +6,9 @@ import com.javaguides.springboot.repositories.GroupRepository;
 import com.javaguides.springboot.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -28,17 +30,17 @@ public class GroupController {
     public Group createGroup(@RequestBody Group group) {
 //        List<String> userGroup = new List<String>();
         System.out.println("Create a group");
-        System.out.println(group.toString());
+//        System.out.println(group.toString());
         // TODO:: set owner to the user creating the group, read from the token
         groupRepository.save(group);
         String groupID = group.get_id();
-        System.out.println(groupID);
+//        System.out.println(groupID);
         String userID=group.getUserAmounts().get(0).getUserID();
-        System.out.println(userID);
+//        System.out.println(userID);
         Optional<User> userOptional = userRepository.findById(userID);
 
         if (userOptional.isPresent()) {
-            System.out.println("into this");
+//            System.out.println("into this");
             User user = userOptional.get();
             List<String> userGroup = user.getUserGroup();
             userGroup.add(groupID);
@@ -49,44 +51,52 @@ public class GroupController {
     }
     //Put request to add a user to a group
     // group id is added to the user table and group table
+    @CrossOrigin
     @PutMapping(value = "/groups", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public String editGroup(@RequestBody Map<String, String> requestBody) {
-        System.out.println("Request Body: " + requestBody.get("userEmail"));
-        User user = userRepository.findByuserEmail(requestBody.get("userEmail"));
-        String userId = user.get_id().toString();
-        Float userBalance = 0.1F;
+    public ResponseEntity<Object> editGroup(@RequestBody Map<String, String> requestBody) {
+        System.out.println("Request Body: " + requestBody.get("emailId"));
+        if(userRepository.findByuserEmail(requestBody.get("emailId"))!=null){
+            User user = userRepository.findByuserEmail(requestBody.get("emailId"));
+            System.out.println(user);
+            String userId = user.get_id().toString();
+            Float userBalance = 0.0F;
 
-        Optional<Group> optionalGroup = groupRepository.findById(requestBody.get("groupID"));
+            Optional<Group> optionalGroup = groupRepository.findById(requestBody.get("groupID"));
 
-        if (optionalGroup.isPresent()) {
-            Group group = optionalGroup.get();
-            ArrayList<Useramount> useramountBeforeAppending = new ArrayList<>(group.getUserAmounts());
-            useramountBeforeAppending.add(new Useramount(userId, userBalance));
-            group.setUserAmounts(useramountBeforeAppending);
-            groupRepository.save(group);
-        } else {
-            System.out.println("Group not found with ID: " + requestBody.get("groupID"));
+            if (optionalGroup.isPresent()) {
+                Group group = optionalGroup.get();
+                ArrayList<Useramount> useramountBeforeAppending = new ArrayList<>(group.getUserAmounts());
+                useramountBeforeAppending.add(new Useramount(userId, userBalance));
+                group.setUserAmounts(useramountBeforeAppending);
+                groupRepository.save(group);
+            } else {
+                System.out.println("Group not found with ID: " + requestBody.get("groupID"));
+            }
+
+            System.out.println(user);
+            if (user.getUserGroup() == null) {
+//            System.out.println("null");
+                List<String> userGroup = new ArrayList<>();
+                ;
+                userGroup.add(requestBody.get("groupID"));
+                user.setUserGroup(userGroup);
+                userRepository.save(user);
+//            System.out.println(userGroup);
+            } else {
+                List<String> userGroup = user.getUserGroup();
+                userGroup.add(requestBody.get("groupID"));
+                user.setUserGroup(userGroup);
+                userRepository.save(user);
+                System.out.println(userGroup);
+            }
+
+            return ResponseEntity.ok().body(Collections.singletonMap("code", "Completed"));
         }
+        else  {
 
-        System.out.println(user);
-        if(user.getUserGroup()==null)
-        {
-            System.out.println("null");
-            List<String> userGroup= new ArrayList<>();;
-            userGroup.add(requestBody.get("groupID"));
-            user.setUserGroup(userGroup);
-            userRepository.save(user);
-            System.out.println(userGroup);
+            // If an error occurs
+            return ResponseEntity.ok().body(Collections.singletonMap("code", "Error"));
         }
-        else {
-            List<String> userGroup = user.getUserGroup();
-            userGroup.add(requestBody.get("groupID"));
-            user.setUserGroup(userGroup);
-            userRepository.save(user);
-            System.out.println(userGroup);
-        }
-
-        return "Done";
     }
 
     //list the group details based on group id
@@ -119,16 +129,17 @@ public class GroupController {
 
 
     //Display all groups for given user ID
+    @CrossOrigin
     @GetMapping("/groups/{userID}")
     @ResponseBody
 
     public List<Object> displayGroup(@PathVariable String userID) {
 
-        System.out.println(userID);
+//        System.out.println(userID);
         User user=(userRepository.findById(userID).get());
-        System.out.println(user);
+//        System.out.println(user);
         List<Object> allGroupUser = new ArrayList<>();
-        System.out.println(groupRepository.findByuserAmounts(userID));
+//        System.out.println(groupRepository.findByuserAmounts(userID));
         for (Group i:groupRepository.findByuserAmounts(userID)) {
             Map<String, String> singleGroupUser = new HashMap<>();
             singleGroupUser.put("name", i.getGroupName());

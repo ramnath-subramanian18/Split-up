@@ -33,38 +33,73 @@ public class TransactionController {
     @CrossOrigin
     @PostMapping(value="/transactions",consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
         public Transaction transaction(@RequestBody Transaction transaction){
-        System.out.println(transaction.getTransactionDescription());
+        System.out.println("transaction adding");
+        Map<String, Float>  transactionAmount= new HashMap<>();
+        Map<String, Float>  transactionAmountForm= new HashMap<>();
+        for (int i=0;i<transactionRepository.findBygroup(transaction.getGroupID()).get(0).getUserSplit().size();i++){
+
+            System.out.println(transactionRepository.findBygroup(transaction.getGroupID()).get(0).getUserSplit().get(i).getUserID());
+            transactionAmount.put(transactionRepository.findBygroup(transaction.getGroupID()).get(0).getUserSplit().get(i).getUserID(),0.0f);
+        }
+        for (int i=0;i<transaction.getUserSplit().size();i++){
+            transactionAmountForm.put(transaction.getUserSplit().get(i).getUserID(),transaction.getUserSplit().get(i).getUserBalance());
+        }
+        for (Map.Entry<String, Float> entry : transactionAmount.entrySet()) {
+            String key = entry.getKey();
+            Float value = entry.getValue();
+            transactionAmountForm.merge(key, value, Float::sum);
+        }
+
+        List<Useramount> userSplit = new ArrayList<>();
+        for (Map.Entry<String, Float> entry : transactionAmountForm.entrySet()) {
+            String userName = entry.getKey();
+            Float userBalance = entry.getValue();
+            userSplit.add(new Useramount(userName, userBalance));
+        }
+
+        transaction.setUserSplit(userSplit);
+        System.out.println(transaction);
         transactionRepository.save(transaction);
         return transaction;
         }
     @CrossOrigin
-    @PutMapping(value="/transactions",consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value="/transactions")
     public String deleteTransaction(@RequestBody Transaction transaction){
-        System.out.println(transaction.toString());
+//        System.out.println(transaction.toString());
         transaction.setTransactionStatus(0);
         transactionRepository.save(transaction);
 
         return "transaction";
     }
         //display all the details for given transactionID
+        @CrossOrigin
     @GetMapping("/transactions/{transactionID}")
     @ResponseBody
     public Optional<Transaction> getTransaction(@PathVariable String transactionID ){
-        System.out.println(transactionID);
-        System.out.println(transactionRepository.findById(transactionID));
+//        System.out.println(transactionID);
+//        System.out.println(transactionRepository.findById(transactionID));
         return transactionRepository.findById(transactionID);
     }
     //Display the transactions for given group ID
+    @CrossOrigin
     @GetMapping("/transactions1/{groupID}")
     @ResponseBody
     public List<Transaction>getTransactionGroup(@PathVariable String groupID){
         List<Transaction> transactions = transactionRepository.findBygroup(groupID);
-        System.out.println(transactions);
+        List<Transaction> undeletedTransaction = new ArrayList<>();
+//        System.out.println(transactions);
         Collections.reverse(transactions); // Reverse the list
-        System.out.println(transactions);
-        return transactions;
+        for (int i=0;i<transactions.size();i++){
+            if(transactions.get(i).getTransactionStatus()==1){
+                undeletedTransaction.add(transactions.get(i));
+            }
+        }
+//        System.out.println(transactions.get(0).getTransactionStatus());
+//        System.out.println(transactions);
+        return undeletedTransaction;
     }
     //display all the balances
+    @CrossOrigin
     @GetMapping("/listUserPrice/{groupID}")
     @ResponseBody
     public List listUserPrice(@PathVariable String groupID){
@@ -72,7 +107,7 @@ public class TransactionController {
         ArrayList<Map<String,Float>> userBalance = new ArrayList<>();
 
         List<Transaction> transaction =transactionRepository.findBygroupTransactionStatus(groupID);
-        System.out.println(transaction);
+//        System.out.println(transaction);
         Map<String, Float> dict1 = new HashMap<>();
         Map<String, Float>  transactionPayeeIDAmount= new HashMap<>();
         for (int i=0;i<transaction.size();i++) {
@@ -102,7 +137,8 @@ public class TransactionController {
             //this is merge method in java
             total_sum.merge(key, value, Float::sum);
         }
-        System.out.println(total_sum);
+//        System.out.println("total_sum");
+//        System.out.println(total_sum);
 
         ArrayList<Useramount> useramountBeforeNewValue= new ArrayList<>();
 
@@ -124,13 +160,23 @@ public class TransactionController {
 
             int positionLarge = valList.indexOf(largest);
             int positionSmall = valList.indexOf(smallest);
-            System.out.println(positionSmall);
-            System.out.println(positionLarge);
+//            System.out.println("positionSmall");
+//            System.out.println(positionSmall);
+//            System.out.println("positionLarge");
+//            System.out.println(positionLarge);
             Map<String, Float> singleSplit = new HashMap<>();
-            singleSplit.put(keyList.get(positionLarge),total_sum.get(keyList.get(positionLarge)));
-            singleSplit.put(keyList.get(positionSmall),total_sum.get(keyList.get(positionSmall)));
+            if(total_sum.get(keyList.get(positionLarge))>-1*total_sum.get(keyList.get(positionSmall))){
+                singleSplit.put(keyList.get(positionLarge),total_sum.get(keyList.get(positionSmall))*-1);
+                singleSplit.put(keyList.get(positionSmall),total_sum.get(keyList.get(positionSmall)));
+            }
+            else {
+                singleSplit.put(keyList.get(positionLarge),total_sum.get(keyList.get(positionLarge)));
+                singleSplit.put(keyList.get(positionSmall),total_sum.get(keyList.get(positionLarge))*-1);
+            }
+
+//            System.out.println("user split");
             userBalance.add(singleSplit);
-            System.out.println(userBalance);
+//            System.out.println(userBalance);
             total_sum.remove(keyList.get(positionLarge));
             total_sum.remove(keyList.get(positionSmall));
             if(total_sum.size()==1 )
@@ -138,7 +184,7 @@ public class TransactionController {
                 String onlyKey = total_sum.keySet().iterator().next();
                 Float value1 = total_sum.get(onlyKey);
                 if(value1==0) {
-                    System.out.println("into this");
+//                    System.out.println("into this");
                     break;
                 }
             }
@@ -151,7 +197,7 @@ public class TransactionController {
             else if(largest < smallest*-1){
                 total_sum.put(keyList.get(positionSmall), value);
             }
-            System.out.println(total_sum);
+//            System.out.println(total_sum);
         }
         List<Map<String, String>> finalList = new ArrayList<>();
         for (Map<String, Float> map : userBalance) {

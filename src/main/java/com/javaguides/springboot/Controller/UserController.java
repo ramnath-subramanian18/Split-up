@@ -39,10 +39,31 @@ public class UserController {
         }
     }
     @CrossOrigin
-    @PostMapping(value="/signin",consumes = MediaType.APPLICATION_JSON_VALUE,produces = MediaType.APPLICATION_JSON_VALUE)
-    public Object loginuser(@RequestBody User user){
-        System.out.println("indise logn");
-        return user;
+    @PostMapping(value="/signin", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public Object loginuser(@RequestBody User user) {
+        try {
+            System.out.println("inside login");
+            System.out.println(user);
+
+            User foundUser = userRepository.findByuserEmail(user.getUserEmail());
+            if (foundUser != null && foundUser.getUserPassword().equals(user.getUserPassword())) {
+                System.out.println("inside the if loop");
+                System.out.println(foundUser.get_id());
+//                return "true";
+                return foundUser;
+
+//                return foundUser.get_id().toString().trim();
+            } else {
+                System.out.println("Invalid credentials");
+                return "false";
+            }
+        } catch (Exception e) {
+            System.err.println("Error occurred during login: " + e.getMessage());
+            e.printStackTrace();
+            return "error";
+        }
+
+//        return user;
 //        try {
 //            if (user.getUserPassword().equals(userRepository.findByuserEmail(user.getUserEmail()).getUserPassword())) {
 ////                String token = JwtUtil.generateToken(user.getUserEmail());
