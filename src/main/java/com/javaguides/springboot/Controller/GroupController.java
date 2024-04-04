@@ -154,6 +154,16 @@ public class GroupController {
         return allGroupUser;
     }
 
+    @CrossOrigin
+    @PostMapping("/groups1")
+    @ResponseBody
+    public Object groupDetails(@RequestBody Map<String, String> requestBody){
+        System.out.println("request body");
+        System.out.println(requestBody);
+        String id = requestBody.get("id");
+        Group group = groupRepository.findById(id).orElse(null); // Use orElse(null) to handle cases where the group is not found
+        return group;
+    }
 
 
 
