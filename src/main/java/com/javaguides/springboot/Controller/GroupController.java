@@ -1,4 +1,5 @@
 package com.javaguides.springboot.Controller;
+import com.fasterxml.jackson.databind.JsonSerializer;
 import com.javaguides.springboot.beans.Group;
 import com.javaguides.springboot.beans.User;
 import com.javaguides.springboot.beans.Useramount;
@@ -12,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
 import org.springframework.web.bind.annotation.CrossOrigin;
+
+import javax.swing.text.html.Option;
 //import com.javaguides.springboot.beans.UserAmount;
 
 //import static jdk.nio.zipfs.ZipFileAttributeView.AttrID.group;
@@ -27,27 +30,43 @@ public class GroupController {
     //Create a group
     @CrossOrigin
     @PostMapping(value = "/groups", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public Group createGroup(@RequestBody Group group) {
-//        List<String> userGroup = new List<String>();
-        System.out.println("Create a group");
-//        System.out.println(group.toString());
-        // TODO:: set owner to the user creating the group, read from the token
-        groupRepository.save(group);
-        String groupID = group.get_id();
-//        System.out.println(groupID);
-        String userID=group.getUserAmounts().get(0).getUserID();
-//        System.out.println(userID);
-        Optional<User> userOptional = userRepository.findById(userID);
+    public Object createGroup(@RequestBody Group group) {
 
-        if (userOptional.isPresent()) {
-//            System.out.println("into this");
-            User user = userOptional.get();
+
+
+        Optional<User> userOptional1=userRepository.findById(group.getUserAmounts().get(0).getUserID());
+        if (userOptional1.isPresent()) {
+            User user = userOptional1.get();
             List<String> userGroup = user.getUserGroup();
-            userGroup.add(groupID);
-            userRepository.save(user);
+            System.out.println(userGroup);
+            for (String groupID : userGroup) {
+                System.out.println(groupID);
+                System.out.println(groupRepository.findById(groupID).get().getGroupName());
+//
+                if(groupRepository.findById(groupID).get().getGroupName().equals(group.getGroupName())) {
+                    HashMap<String, String> hashMap = new HashMap<>();
+                    hashMap.put("error", "Group already Exists");
+                    return hashMap;
+                }
+            }
+            groupRepository.save(group);
+            String groupIDSingle = group.get_id();
+            String userID = group.getUserAmounts().get(0).getUserID();
+            Optional<User> userOptional = userRepository.findById(userID);
+
+            if (userOptional.isPresent()) {
+                userGroup.add(groupIDSingle);
+                userRepository.save(user);
+            }
+            return group;
+
+        }
+        else {
+            HashMap<String, String> hashMap = new HashMap<>();
+            hashMap.put("error","user name doesn't exists");
+            return hashMap;
         }
 
-        return group;
     }
     //Put request to add a user to a group
     // group id is added to the user table and group table

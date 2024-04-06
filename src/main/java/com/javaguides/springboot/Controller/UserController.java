@@ -59,27 +59,12 @@ public class UserController {
             return "error";
         }
 
-//        return user;
-//        try {
-//            if (user.getUserPassword().equals(userRepository.findByuserEmail(user.getUserEmail()).getUserPassword())) {
-////                String token = JwtUtil.generateToken(user.getUserEmail());
-////                System.out.println("token");
-////                System.out.println(token);
-//                return userRepository.findByuserEmail(user.getUserEmail());
-//            } else {
-//                return false;
-//            }
-//        }
-//        catch(Exception e) {
-//            return false;
-//        }
     }
 
-
+    @CrossOrigin
     @GetMapping(value="/userdetailsgroup/{GroupId}")
     @ResponseBody
     public List <Object> userDetailsGroup(@PathVariable String GroupId){
-//        Optional<Group> group =(groupRepository.findById(GroupId));
         List<Useramount> userId =groupRepository.findById(GroupId).get().getUserAmounts();
         List <Object> alluser=new ArrayList<Object>();
         for (int i=0;i<userId.size();i++) {
@@ -89,5 +74,22 @@ public class UserController {
         }
         return alluser;
     }
+    @CrossOrigin
+    @PostMapping(value="/userBalance")
+    @ResponseBody
+    public Object userBalance(@RequestBody Map<String, String> requestBody){
+        HashMap<String, Double> hashMap = new HashMap<>();
+        Double userBalance=0.0;
+        List<Group> groups = groupRepository.findByuserAmounts(requestBody.get("id"));
 
+        for (Group group : groups) {
+            for (Useramount useramount:group.getUserAmounts()) {
+                if(useramount.getUserID().equals(requestBody.get("id"))){
+                    userBalance+=useramount.getUserBalance();
+                }
+            }
+        }
+        hashMap.put("totalBalance",userBalance);
+        return hashMap;
+    }
 }

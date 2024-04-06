@@ -13,7 +13,9 @@ import java.util.List;
 public interface GroupRepository extends MongoRepository<Group, String> {
     @Query(" {'userAmounts.userID':?0}")
     List<Group> findByuserAmounts(String id);
-//    Group findByuserID(String _id);
+
+    Group findBygroupName(String groupName);
+
 
 //    Group upsert(String _id,Group group);
 
