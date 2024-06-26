@@ -79,10 +79,11 @@
             <version>1.18.30</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
+        <!-- <dependency>
             <groupId>com.javaguides</groupId>
             <artifactId>springboot</artifactId>
             <version>0.0.1-SNAPSHOT</version>
+<<<<<<< HEAD
         </dependency>
         <dependency>
             <groupId>org.json</groupId>
@@ -92,6 +93,9 @@
 
 
 
+=======
+        </dependency> -->
+>>>>>>> origin/main
 
     </dependencies>
 
