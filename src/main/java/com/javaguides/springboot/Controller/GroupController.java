@@ -5,12 +5,15 @@ import com.javaguides.springboot.beans.User;
 import com.javaguides.springboot.beans.Useramount;
 import com.javaguides.springboot.repositories.GroupRepository;
 import com.javaguides.springboot.repositories.UserRepository;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.PrintStream;
 import java.util.*;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
@@ -30,120 +33,188 @@ public class GroupController {
     //Create a group
     @CrossOrigin
     @PostMapping(value = "/groups", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public Object createGroup(@RequestBody Group group) {
+    public ResponseEntity<?> createGroup(@RequestBody Group group) {
+        System.out.println(":grouping123");
+        System.out.println(group);
+        try {
+            Optional<User> userOptional1 = userRepository.findById(group.getUserAmounts().get(0).getUserID());
+            System.out.println("userOptional1");
+            System.out.println(userOptional1);
+            if (userOptional1.isPresent()) {
+                System.out.println(userOptional1);
+                User user = userOptional1.get();
 
+                List<String> userGroup = user.getUserGroup();
+                System.out.println("usergroup");
+                System.out.println(userGroup);
 
-
-        Optional<User> userOptional1=userRepository.findById(group.getUserAmounts().get(0).getUserID());
-        if (userOptional1.isPresent()) {
-            User user = userOptional1.get();
-            List<String> userGroup = user.getUserGroup();
-            System.out.println(userGroup);
-            for (String groupID : userGroup) {
-                System.out.println(groupID);
-                System.out.println(groupRepository.findById(groupID).get().getGroupName());
-//
-                if(groupRepository.findById(groupID).get().getGroupName().equals(group.getGroupName())) {
-                    HashMap<String, String> hashMap = new HashMap<>();
-                    hashMap.put("error", "Group already Exists");
-                    return hashMap;
+                if (userGroup == null) {
+                    userGroup = new ArrayList<>();
+                    user.setUserGroup(userGroup);
                 }
+
+                    System.out.println("into if loop");
+                    for (String groupID : userGroup) {
+                        System.out.println(groupRepository.findById(groupID).get().getGroupName());
+                        if (groupRepository.findById(groupID).get().getGroupName().equals(group.getGroupName())) {
+                            JSONObject jsonResponse = new JSONObject();
+                            jsonResponse.put("message", "Group already Exists");
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonResponse.toString());
+                        }
+                    }
+
+
+
+                System.out.println("for loop over");
+                groupRepository.save(group);
+                System.out.println("saved success");
+                String groupIDSingle = group.get_id();
+                System.out.println("here12345");
+                System.out.println(groupIDSingle);
+                String userID = group.getUserAmounts().get(0).getUserID();
+                System.out.println(userID);
+                Optional<User> userOptional = userRepository.findById(userID);
+
+                if (userOptional.isPresent()) {
+                    userGroup.add(groupIDSingle);
+                    userRepository.save(user);
+                }
+                return ResponseEntity.ok(group);
+            } else {
+                JSONObject jsonResponse = new JSONObject();
+                jsonResponse.put("message", "user name doesn't exists");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonResponse.toString());
             }
-            groupRepository.save(group);
-            String groupIDSingle = group.get_id();
-            String userID = group.getUserAmounts().get(0).getUserID();
-            Optional<User> userOptional = userRepository.findById(userID);
-
-            if (userOptional.isPresent()) {
-                userGroup.add(groupIDSingle);
-                userRepository.save(user);
-            }
-            return group;
-
         }
-        else {
-            HashMap<String, String> hashMap = new HashMap<>();
-            hashMap.put("error","user name doesn't exists");
-            return hashMap;
+        catch (Exception e) {
+            e.printStackTrace();
+            JSONObject jsonResponse = new JSONObject();
+            jsonResponse.put("message", "Try Later");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(jsonResponse.toString());
         }
-
     }
     //Put request to add a user to a group
     // group id is added to the user table and group table
     @CrossOrigin
     @PutMapping(value = "/groups", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Object> editGroup(@RequestBody Map<String, String> requestBody) {
-        System.out.println("Request Body: " + requestBody.get("emailId"));
-        if(userRepository.findByuserEmail(requestBody.get("emailId"))!=null){
-            User user = userRepository.findByuserEmail(requestBody.get("emailId"));
-            System.out.println(user);
-            String userId = user.get_id().toString();
-            Float userBalance = 0.0F;
+    public ResponseEntity<?> editGroup(@RequestBody Map<String, String> requestBody) {
+        System.out.print("into the put for group");
+        try {
+            String emailId = requestBody.get("emailId");
+            String groupID = requestBody.get("groupID");
 
-            Optional<Group> optionalGroup = groupRepository.findById(requestBody.get("groupID"));
-
-            if (optionalGroup.isPresent()) {
-                Group group = optionalGroup.get();
-                ArrayList<Useramount> useramountBeforeAppending = new ArrayList<>(group.getUserAmounts());
-                useramountBeforeAppending.add(new Useramount(userId, userBalance));
-                group.setUserAmounts(useramountBeforeAppending);
-                groupRepository.save(group);
-            } else {
-                System.out.println("Group not found with ID: " + requestBody.get("groupID"));
+            if (emailId == null || emailId.isEmpty() || groupID == null || groupID.isEmpty()) {
+                JSONObject jsonResponse = new JSONObject();
+                jsonResponse.put("message", "Email ID or Group ID is missing");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonResponse.toString());
             }
 
+            User user = userRepository.findByuserEmail(emailId);
             System.out.println(user);
-            if (user.getUserGroup() == null) {
-//            System.out.println("null");
-                List<String> userGroup = new ArrayList<>();
-                ;
-                userGroup.add(requestBody.get("groupID"));
-                user.setUserGroup(userGroup);
-                userRepository.save(user);
-//            System.out.println(userGroup);
+            if (user == null) {
+                JSONObject jsonResponse = new JSONObject();
+                jsonResponse.put("message", "User not found with email: " + emailId);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonResponse.toString());
             } else {
-                List<String> userGroup = user.getUserGroup();
-                userGroup.add(requestBody.get("groupID"));
-                user.setUserGroup(userGroup);
-                userRepository.save(user);
-                System.out.println(userGroup);
+                System.out.print("into the else part");
+                System.out.println(user.get_id());
+
+                Optional<Group> optionalGroup = groupRepository.findById(groupID);
+                if (optionalGroup.isPresent()) {
+                    Group group = optionalGroup.get();
+
+                    // Check if the user already exists in the group
+                    for (Useramount userAmount : group.getUserAmounts()) {
+                        if (userAmount.getUserID().equals(user.get_id())) {
+                            JSONObject jsonResponse = new JSONObject();
+                            jsonResponse.put("message", "User already exists in the group: " + emailId);
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonResponse.toString());
+                        }
+                    }
+
+                    // Add user to the group
+                    String userId = user.get_id().toString();
+                    Float userBalance = 0.0F;
+                    ArrayList<Useramount> useramountBeforeAppending = new ArrayList<>(group.getUserAmounts());
+                    useramountBeforeAppending.add(new Useramount(userId, userBalance));
+                    group.setUserAmounts(useramountBeforeAppending);
+                    groupRepository.save(group);
+
+                    // Update user's groups
+                    if (user.getUserGroup() == null) {
+                        List<String> userGroup = new ArrayList<>();
+                        userGroup.add(groupID);
+                        user.setUserGroup(userGroup);
+                    } else {
+                        List<String> userGroup = user.getUserGroup();
+                        if (!userGroup.contains(groupID)) {
+                            userGroup.add(groupID);
+                        }
+                        user.setUserGroup(userGroup);
+                    }
+                    userRepository.save(user);
+
+                    JSONObject jsonResponse = new JSONObject();
+                    jsonResponse.put("message", "User added to the group successfully.");
+                    return ResponseEntity.ok(jsonResponse.toString());
+                } else {
+                    JSONObject jsonResponse = new JSONObject();
+                    jsonResponse.put("message", "Group not found with ID: " + groupID);
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonResponse.toString());
+                }
             }
-
-            return ResponseEntity.ok().body(Collections.singletonMap("code", "Completed"));
-        }
-        else  {
-
-            // If an error occurs
-            return ResponseEntity.ok().body(Collections.singletonMap("code", "Error"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            JSONObject jsonResponse = new JSONObject();
+            jsonResponse.put("message", "Try Later");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(jsonResponse.toString());
         }
     }
+
 
     //list the group details based on group id
     @CrossOrigin
     @GetMapping("/groups/userID/{groupID}")
     @ResponseBody
-    public HashMap listGroup(@PathVariable String groupID ){
-        Optional<Group> group=groupRepository.findById(groupID);
-        HashMap allDetailsGroup = new HashMap();
-        List<HashMap<String ,String>> allUserAmountsName = new ArrayList<HashMap<String ,String>>();
-//        System.out.println(group.get().getUserAmounts());
-        for (Useramount eachUserBalance:group.get().getUserAmounts()){
-            String userName=(userRepository.findById(eachUserBalance.getUserID()).get().getUserName());
-            HashMap userAmountsName = new HashMap();
-            userAmountsName.put("userID",eachUserBalance.getUserID());
-            userAmountsName.put("userBalance",eachUserBalance.getUserBalance());
-            userAmountsName.put("userName",userName);
-            allUserAmountsName.add(userAmountsName);
+    public ResponseEntity<?> listGroup(@PathVariable String groupID ) {
+        try {
+            Optional<Group> group = groupRepository.findById(groupID);
+            System.out.println("groupinmg");
+            System.out.println(group);
+            if (!group.isPresent()) {
+                JSONObject jsonResponse = new JSONObject();
+                jsonResponse.put("message", "Group name is not present");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonResponse.toString());
+            }
+            HashMap allDetailsGroup = new HashMap();
+            List<HashMap<String, String>> allUserAmountsName = new ArrayList<HashMap<String, String>>();
+            for (Useramount eachUserBalance : group.get().getUserAmounts()) {
+                System.out.println("eachUserBalance");
+                System.out.println(eachUserBalance);
+                String userName = (userRepository.findById(eachUserBalance.getUserID()).get().getUserName());
+                HashMap userAmountsName = new HashMap();
+                userAmountsName.put("userID", eachUserBalance.getUserID());
+                userAmountsName.put("userBalance", eachUserBalance.getUserBalance());
+                userAmountsName.put("userName", userName);
+                allUserAmountsName.add(userAmountsName);
+                System.out.println(allUserAmountsName);
+            }
+            System.out.println("for loop completed");
+            allDetailsGroup.put("_id", group.get().getGroupName());
+            allDetailsGroup.put("groupName", group.get().getGroupName());
+            allDetailsGroup.put("userAmounts", allUserAmountsName);
+            allDetailsGroup.put("groupOwner", group.get().getGroupOwner());
+            allDetailsGroup.put("groupDescription", group.get().getGroupOwner());
+            System.out.println(allDetailsGroup);
+            return ResponseEntity.ok(allDetailsGroup);
         }
-        allDetailsGroup.put("_id",group.get().getGroupName());
-        allDetailsGroup.put("groupName",group.get().getGroupName());
-        allDetailsGroup.put("userAmounts",allUserAmountsName);
-        allDetailsGroup.put("groupOwner",group.get().getGroupOwner());
-        allDetailsGroup.put("groupDescription",group.get().getGroupOwner());
-        System.out.println(allDetailsGroup);
-//        System.out.println(groupRepository.findById(groupID));
-//        return groupRepository.findById(groupID);
-        return allDetailsGroup;
+        catch (Exception e) {
+            e.printStackTrace();
+            JSONObject jsonResponse = new JSONObject();
+            jsonResponse.put("message", "Try Later");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(jsonResponse.toString());
+        }
+
     }
 
 
@@ -152,36 +223,63 @@ public class GroupController {
     @GetMapping("/groups/{userID}")
     @ResponseBody
 
-    public List<Object> displayGroup(@PathVariable String userID) {
+    public ResponseEntity<?> displayGroup(@PathVariable String userID) {
+        try {
+            Optional<User> userOptional = userRepository.findById(userID);
+            if (!userOptional.isPresent()) {
+                JSONObject jsonResponse = new JSONObject();
+                jsonResponse.put("message", "userid is not valid");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonResponse.toString());
+            } else {
+                List<Object> allGroupUser = new ArrayList<>();
+                for (Group i : groupRepository.findByuserAmounts(userID)) {
+                    Map<String, String> singleGroupUser = new HashMap<>();
+                    singleGroupUser.put("name", i.getGroupName());
+                    singleGroupUser.put("id", i.get_id());
 
-//        System.out.println(userID);
-        User user=(userRepository.findById(userID).get());
-//        System.out.println(user);
-        List<Object> allGroupUser = new ArrayList<>();
-//        System.out.println(groupRepository.findByuserAmounts(userID));
-        for (Group i:groupRepository.findByuserAmounts(userID)) {
-            Map<String, String> singleGroupUser = new HashMap<>();
-            singleGroupUser.put("name", i.getGroupName());
-            singleGroupUser.put("id", i.get_id());
-            for (Useramount userAmount : i.getUserAmounts()) {
-                if (userID.equals(userAmount.getUserID())) {
-                    singleGroupUser.put("balance", userAmount.getUserBalance().toString());
+                    for (Useramount userAmount : i.getUserAmounts()) {
+
+                        System.out.println(userAmount.getUserBalance());
+                        if (userID.equals(userAmount.getUserID())) {
+                            singleGroupUser.put("balance", userAmount.getUserBalance().toString());
+                        }
+                    }
+                    allGroupUser.add(singleGroupUser);
                 }
+                return ResponseEntity.ok(allGroupUser);
             }
-            allGroupUser.add(singleGroupUser);
         }
-        return allGroupUser;
+        catch (Exception e) {
+            e.printStackTrace();
+            JSONObject jsonResponse = new JSONObject();
+            jsonResponse.put("message", "Try Later");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(jsonResponse.toString());
+        }
     }
 
     @CrossOrigin
-    @PostMapping("/groups1")
+    @GetMapping("/totalUserBalance/{groupID}")
     @ResponseBody
-    public Object groupDetails(@RequestBody Map<String, String> requestBody){
-        System.out.println("request body");
-        System.out.println(requestBody);
-        String id = requestBody.get("id");
-        Group group = groupRepository.findById(id).orElse(null); // Use orElse(null) to handle cases where the group is not found
-        return group;
+
+    public ResponseEntity<?> groupDetails(@PathVariable String groupID){
+        try {
+            Optional<Group> groupOptional = groupRepository.findById(groupID);
+            if (!groupOptional.isPresent()) {
+                JSONObject jsonResponse = new JSONObject();
+                jsonResponse.put("message", "group is not empty");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonResponse.toString());
+            } else {
+                Group group = groupOptional.get(); // Use orElse(null) to handle cases where the group is not found
+                return ResponseEntity.ok(group);
+
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            JSONObject jsonResponse = new JSONObject();
+            jsonResponse.put("message", "Try Later");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(jsonResponse.toString());
+        }
     }
 
 
