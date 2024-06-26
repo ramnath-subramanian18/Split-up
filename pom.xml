@@ -83,19 +83,15 @@
             <groupId>com.javaguides</groupId>
             <artifactId>springboot</artifactId>
             <version>0.0.1-SNAPSHOT</version>
-<<<<<<< HEAD
-        </dependency>
+        </dependency> -->
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20210307</version> <!-- or the latest version -->
+            <version>20210307</version>
         </dependency>
 
 
 
-=======
-        </dependency> -->
->>>>>>> origin/main
 
     </dependencies>
 
