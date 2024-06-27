@@ -25,6 +25,12 @@ public class UserController {
     @Autowired
     private GroupRepository groupRepository;
 
+    @CrossOrigin
+    @GetMapping("/testing")
+    public String testing() {
+        return "testing";
+    }
+
 
     @CrossOrigin
     @PostMapping(value = "/users", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -47,6 +53,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(jsonResponse.toString());
         }
     }
+
 
 
     @CrossOrigin
