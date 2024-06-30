@@ -116,7 +116,7 @@ public class GroupController {
                 jsonResponse.put("message", "User not found with email: " + emailId);
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonResponse.toString());
             } else {
-                System.out.print("into the else part");
+                System.out.print("into the else partf");
                 System.out.println(user.get_id());
 
                 Optional<Group> optionalGroup = groupRepository.findById(groupID);

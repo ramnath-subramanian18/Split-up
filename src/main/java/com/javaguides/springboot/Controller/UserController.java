@@ -1,14 +1,11 @@
 package com.javaguides.springboot.Controller;
-
 import com.javaguides.springboot.beans.Group;
 import com.javaguides.springboot.beans.User;
 import com.javaguides.springboot.beans.Useramount;
 import com.javaguides.springboot.repositories.GroupRepository;
 import com.javaguides.springboot.repositories.UserRepository;
-import org.bson.json.JsonObject;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.annotation.Reference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -88,6 +85,7 @@ public class UserController {
                 System.out.println(foundUser.get().getUserName());
                 JSONObject jsonResponse = new JSONObject();
                 jsonResponse.put("userName", foundUser.get().getUserName());
+                jsonResponse.put("userEmail", foundUser.get().getUserEmail());
                 System.out.println(jsonResponse);
                 return ResponseEntity.ok(jsonResponse.toString()); // Return the username if user is found
             } else {
