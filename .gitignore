@@ -1,5 +1,6 @@
 application.properties
 system.properties
+Dockerfile
 ##############################
 ## Java
 ##############################
