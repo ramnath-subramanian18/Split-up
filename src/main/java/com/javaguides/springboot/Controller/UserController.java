@@ -11,16 +11,25 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.*;
+import com.javaguides.springboot.Service.LogglyService;
+import com.javaguides.springboot.Service.StringLog;
 
 @RestController
 
 public class UserController {
+    //It allows Spring to automatically "wire" or inject the required beans
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
     private GroupRepository groupRepository;
+
+    @Autowired
+    private LogglyService logglyService;
+    @Autowired
+    private StringLog stringLog;
 
     @CrossOrigin
     @GetMapping("/testing")
@@ -45,6 +54,8 @@ public class UserController {
 
         }
         catch (Exception e) {
+            String logMessage = stringLog.convertString(e);
+            logglyService.sendLog(logMessage);
             JSONObject jsonResponse = new JSONObject();
             jsonResponse.put("message", "Try Later");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(jsonResponse.toString());
@@ -61,12 +72,15 @@ public class UserController {
             if (foundUser != null && foundUser.getUserPassword().equals(user.getUserPassword())) {
                 return ResponseEntity.ok(foundUser); // Return the user object if credentials are valid
             } else {
+
                 JSONObject jsonResponse = new JSONObject();
                 jsonResponse.put("message", "Invalid credentials");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(jsonResponse.toString());
             }
         }
         catch (Exception e) {
+            String logMessage = stringLog.convertString(e);
+            logglyService.sendLog(logMessage);
             JSONObject jsonResponse = new JSONObject();
             jsonResponse.put("message", "Try Later");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(jsonResponse.toString());
@@ -74,26 +88,24 @@ public class UserController {
     }
 
     @CrossOrigin
-    @GetMapping("/userName")
-    public ResponseEntity<?> fetchUsername(@RequestParam String userId) {
-        System.out.println("into username class");
+    @GetMapping("/userDetails")
+    public ResponseEntity<?> fetchDetails(@RequestParam String userId) {
         try {
             Optional<User> foundUser = userRepository.findById(userId);
-            System.out.println(foundUser);
             if (foundUser.isPresent()) {
-                System.out.println(foundUser);
-                System.out.println(foundUser.get().getUserName());
                 JSONObject jsonResponse = new JSONObject();
                 jsonResponse.put("userName", foundUser.get().getUserName());
                 jsonResponse.put("userEmail", foundUser.get().getUserEmail());
-                System.out.println(jsonResponse);
                 return ResponseEntity.ok(jsonResponse.toString()); // Return the username if user is found
             } else {
+
                 JSONObject jsonResponse = new JSONObject();
                 jsonResponse.put("message", "UserName doesn't exist");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(jsonResponse.toString());
             }
         } catch (Exception e) {
+            String logMessage = stringLog.convertString(e);
+            logglyService.sendLog(logMessage);
             e.printStackTrace();
             JSONObject jsonResponse = new JSONObject();
             jsonResponse.put("message", "Try later");
@@ -102,42 +114,47 @@ public class UserController {
     }
 
 
-//    @CrossOrigin
-//    @PostMapping(value="/signin", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-//    public Object loginuser(@RequestBody User user) {
-//        try {
-//
-//            User foundUser = userRepository.findByuserEmail(user.getUserEmail());
-//            if (foundUser != null && foundUser.getUserPassword().equals(user.getUserPassword())) {
-//                return foundUser;
-//
-//            } else {
-//                System.out.println("Invalid credentials");
-//                return "false";
-//            }
-//        } catch (Exception e) {
-//            System.err.println("Error occurred during login: " + e.getMessage());
-//            e.printStackTrace();
-//            return "error";
-//        }
-//
-//    }
+    @CrossOrigin
+    @GetMapping("/userEmail")
+    public ResponseEntity<?> fetchUserEmail(@RequestParam String userEmail) {
+        try {
+            User foundUser = userRepository.findByuserEmail(userEmail);
+            if (foundUser != null) {
+//            Optional<User> foundUser = userRepository.findByuserEmail(userEmail);
+                JSONObject jsonResponse = new JSONObject();
+                jsonResponse.put("userName", foundUser.getUserName());
+                jsonResponse.put("userEmail", foundUser.getUserEmail());
+                return ResponseEntity.ok(jsonResponse.toString()); // Return the username if user is found
+            } else {
+                JSONObject jsonResponse = new JSONObject();
+                jsonResponse.put("message", "UserEmail doesn't exist");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(jsonResponse.toString());
+            }
+        } catch (Exception e) {
+            String logMessage = stringLog.convertString(e);
+            logglyService.sendLog(logMessage);
+            e.printStackTrace();
+            JSONObject jsonResponse = new JSONObject();
+            jsonResponse.put("message", "Try later");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(jsonResponse.toString());
+        }
+    }
 
 
 
-//no uised I guess check and remove it
+
+//mostly it is not used
     @CrossOrigin
     @GetMapping(value="/userdetailsgroup/{GroupId}")
     @ResponseBody
     public List <Object> userDetailsGroup(@PathVariable String GroupId){
-        List<Useramount> userId =groupRepository.findById(GroupId).get().getUserAmounts();
-        List <Object> alluser=new ArrayList<Object>();
-        for (int i=0;i<userId.size();i++) {
-            System.out.println(userId.get(i).getUserID());
-            System.out.println(userRepository.findById(userId.get(i).getUserID()));
-            alluser.add(userRepository.findById(userId.get(i).getUserID()));
-        }
-        return alluser;
+            List<Useramount> userId = groupRepository.findById(GroupId).get().getUserAmounts();
+            List<Object> alluser = new ArrayList<Object>();
+            for (int i = 0; i < userId.size(); i++) {
+                alluser.add(userRepository.findById(userId.get(i).getUserID()));
+            }
+            return alluser;
+
     }
     @CrossOrigin
     @GetMapping(value="/userBalance/{userId}")
@@ -165,6 +182,8 @@ public class UserController {
             }
         }
         catch (Exception e) {
+            String logMessage = stringLog.convertString(e);
+            logglyService.sendLog(logMessage);
 
             JSONObject jsonResponse = new JSONObject();
             jsonResponse.put("message", "Try Later");

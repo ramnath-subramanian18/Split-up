@@ -12,21 +12,25 @@ import java.util.concurrent.TimeUnit;
 @Getter
 public class Useramount {
     private String userID;
+    private String userName;
     private Float userBalance;
+
 
     @Override
     public String toString() {
-        return "userAmount{" +
+        return "Useramount{" +
                 "userID='" + userID + '\'' +
+                ", userName='" + userName + '\'' +
                 ", userBalance=" + userBalance +
-
                 '}';
     }
 
     public Useramount(){}
-    public Useramount(String userID, Float userBalance){
+    public Useramount(String userID, String userName,Float userBalance){
         this.userID=userID;
+        this.userName=userName;
         this.userBalance=userBalance;
+
     }
 
 }

@@ -1,8 +1,9 @@
 package com.javaguides.springboot.Controller;
+import com.javaguides.springboot.Service.LogglyService;
+import com.javaguides.springboot.Service.StringLog;
+import com.javaguides.springboot.Service.TransactionService;
 import com.javaguides.springboot.beans.Group;
 import com.javaguides.springboot.beans.Transaction;
-import com.javaguides.springboot.beans.User;
-
 import com.javaguides.springboot.beans.Useramount;
 import com.javaguides.springboot.repositories.GroupRepository;
 import com.javaguides.springboot.repositories.TransactionRepository;
@@ -13,8 +14,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.List;
 
 
 
@@ -26,10 +28,16 @@ public class TransactionController {
     private GroupRepository groupRepository;
 
     @Autowired
+    private TransactionService transactionService;
+
+    @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private LogglyService logglyService;
+    @Autowired
+    private StringLog stringLog;
     @GetMapping("/health")
     public String health() {
-        System.out.println("Ok");
         return "OK";
     }
     //Send post request to save a transaction
@@ -38,41 +46,47 @@ public class TransactionController {
 
         public ResponseEntity<?> transaction (@RequestBody Transaction transaction){
         try {
-            System.out.println("transaction adding");
             Map<String, Float> transactionAmount = new HashMap<>();
-            Map<String, Float> transactionAmountForm = new HashMap<>();
             List<Transaction> transactionOptional = transactionRepository.findBygroup(transaction.getGroupID());
+
             if (!transactionOptional.isEmpty()) {
 
                 for (int i = 0; i < transactionRepository.findBygroup(transaction.getGroupID()).get(0).getUserSplit().size(); i++) {
-                    System.out.println("into first for ");
-                    System.out.println(transactionRepository.findBygroup(transaction.getGroupID()).get(0).getUserSplit().get(i).getUserID());
                     transactionAmount.put(transactionRepository.findBygroup(transaction.getGroupID()).get(0).getUserSplit().get(i).getUserID(), 0.0f);
                 }
-                for (int i = 0; i < transaction.getUserSplit().size(); i++) {
+//                for (int i = 0; i < transaction.getUserSplit().size(); i++) {
+//
+//                    transactionAmountForm.put(transaction.getUserSplit().get(i).getUserID(), transaction.getUserSplit().get(i).getUserBalance());
+//                }
+//                for (Map.Entry<String, Float> entry : transactionAmount.entrySet()) {
+//
+//                    String key = entry.getKey();
+//                    Float value = entry.getValue();
+//                    transactionAmountForm.merge(key, value, Float::sum);
+//                }
 
-                    transactionAmountForm.put(transaction.getUserSplit().get(i).getUserID(), transaction.getUserSplit().get(i).getUserBalance());
-                }
-                for (Map.Entry<String, Float> entry : transactionAmount.entrySet()) {
-
-                    String key = entry.getKey();
-                    Float value = entry.getValue();
-                    transactionAmountForm.merge(key, value, Float::sum);
-                }
-
-                List<Useramount> userSplit = new ArrayList<>();
-                for (Map.Entry<String, Float> entry : transactionAmountForm.entrySet()) {
-
-                    String userName = entry.getKey();
-                    Float userBalance = entry.getValue();
-                    userSplit.add(new Useramount(userName, userBalance));
-                }
+                List<Useramount> userSplit = transaction.getUserSplit();
+//                for (Map.Entry<String, Float> entry : transactionAmountForm.entrySet()) {
+//
+//                    String userName = entry.getKey();
+//                    Float userBalance = entry.getValue();
+//                    String userID="123";
+//                    userSplit.add(new Useramount(userID,userName, userBalance));
+//                }
 
                 transaction.setUserSplit(userSplit);
+//                String datestr=transaction.getTimeStamp().toString();
+//                Date date = java.util.Date.from(java.time.Instant.parse(datestr));
+//                transaction.setTimeStamp(date);
+
+
                 transactionRepository.save(transaction);
                 return ResponseEntity.ok(transaction);
             }
             else {
+//                String datestr=transaction.getTimeStamp().toString();
+//                Date date = java.util.Date.from(java.time.Instant.parse(datestr));
+//                transaction.setTimeStamp(date);
                 transactionRepository.save(transaction);
 
                 return ResponseEntity.ok(transaction);
@@ -83,6 +97,8 @@ public class TransactionController {
             }
         }
         catch (Exception e) {
+            String logMessage = stringLog.convertString(e);
+            logglyService.sendLog(logMessage);
             JSONObject jsonResponse = new JSONObject();
             jsonResponse.put("message", "Try Later");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(jsonResponse.toString());
@@ -93,12 +109,13 @@ public class TransactionController {
     @PutMapping(value="/transactions")
     public ResponseEntity<?> deleteTransaction(@RequestBody Transaction transaction){
         try {
-//        System.out.println(transaction.toString());
             transaction.setTransactionStatus(0);
             transactionRepository.save(transaction);
            return ResponseEntity.ok(transaction);
         }
         catch (Exception e) {
+            String logMessage = stringLog.convertString(e);
+            logglyService.sendLog(logMessage);
             JSONObject jsonResponse = new JSONObject();
             jsonResponse.put("message", "Try Later");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(jsonResponse.toString());
@@ -120,6 +137,8 @@ public class TransactionController {
             }
         }
         catch (Exception e) {
+            String logMessage = stringLog.convertString(e);
+            logglyService.sendLog(logMessage);
             JSONObject jsonResponse = new JSONObject();
             jsonResponse.put("message", "Try Later");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(jsonResponse.toString());
@@ -130,10 +149,8 @@ public class TransactionController {
     @GetMapping("/transactions1/{groupID}")
     @ResponseBody
     public ResponseEntity<?> getTransactionGroup(@PathVariable String groupID){
-        System.out.println("into transaction1");
         try {
             List<Transaction> transactions = transactionRepository.findBygroup(groupID);
-            System.out.println("into try");
             if (transactions.size() != 0) {
                 List<Transaction> undeletedTransaction = new ArrayList<>();
                 Collections.reverse(transactions); // Reverse the list
@@ -150,6 +167,8 @@ public class TransactionController {
             }
         }
         catch (Exception e) {
+            String logMessage = stringLog.convertString(e);
+            logglyService.sendLog(logMessage);
             JSONObject jsonResponse = new JSONObject();
             jsonResponse.put("message", "Try Later");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(jsonResponse.toString());
@@ -160,10 +179,7 @@ public class TransactionController {
     @GetMapping("/listUserPrice/{groupID}")
     @ResponseBody
     public ResponseEntity<?> listUserPrice(@PathVariable String groupID) {
-        System.out.println(groupID);
         List<Transaction> transaction1 = transactionRepository.findBygroupTransactionStatus(groupID);
-        System.out.println("transaction");
-        System.out.println(transaction1);
         if(transaction1.isEmpty())
         {
             JSONObject jsonResponse = new JSONObject();
@@ -175,9 +191,6 @@ public class TransactionController {
             ArrayList<Map<String, Float>> userBalance = new ArrayList<>();
 
             List<Transaction> transaction = transactionRepository.findBygroupTransactionStatus(groupID);
-            System.out.println("transaction");
-            System.out.println(transaction);
-//        System.out.println(transaction);
             Map<String, Float> dict1 = new HashMap<>();
             Map<String, Float> transactionPayeeIDAmount = new HashMap<>();
             for (int i = 0; i < transaction.size(); i++) {
@@ -187,7 +200,6 @@ public class TransactionController {
                 }
                 transactionPayeeIDAmount.put(transaction.get(i).getTransactionPayeeID(), existingValue1 + transaction.get(i).getTransactionAmount());
                 for (Useramount person : transaction.get(i).getUserSplit()) {
-//                System.out.println(person.getUserBalance());
                     float existingValue = 0;
                     if (dict1.containsKey(person.getUserID())) {
                         existingValue = dict1.get(person.getUserID());
@@ -197,8 +209,6 @@ public class TransactionController {
                     }
                 }
             }
-//        System.out.println(dict1);
-//        System.out.println(transactionPayeeIDAmount);
             Map<String, Float> total_sum = new HashMap<>(dict1);
             for (Map.Entry<String, Float> entry : transactionPayeeIDAmount.entrySet()) {
                 String key = entry.getKey();
@@ -206,13 +216,10 @@ public class TransactionController {
                 //this is merge method in java
                 total_sum.merge(key, value, Float::sum);
             }
-//        System.out.println("total_sum");
-//        System.out.println(total_sum);
-
             ArrayList<Useramount> useramountBeforeNewValue = new ArrayList<>();
 
             for (int i = 0; i < groupRepository.findById(groupID).get().getUserAmounts().size(); i++) {
-                useramountBeforeNewValue.add(new Useramount(groupRepository.findById(groupID).get().getUserAmounts().get(i).getUserID(), total_sum.get(groupRepository.findById(groupID).get().getUserAmounts().get(i).getUserID())));
+                useramountBeforeNewValue.add(new Useramount(groupRepository.findById(groupID).get().getUserAmounts().get(i).getUserID(),groupRepository.findById(groupID).get().getUserAmounts().get(i).getUserName(), total_sum.get(groupRepository.findById(groupID).get().getUserAmounts().get(i).getUserID())));
             }
             Optional<Group> optionalGroup = groupRepository.findById(groupID);
             Group group = optionalGroup.get();
@@ -229,10 +236,6 @@ public class TransactionController {
 
                 int positionLarge = valList.indexOf(largest);
                 int positionSmall = valList.indexOf(smallest);
-//            System.out.println("positionSmall");
-//            System.out.println(positionSmall);
-//            System.out.println("positionLarge");
-//            System.out.println(positionLarge);
                 Map<String, Float> singleSplit = new HashMap<>();
                 if (total_sum.get(keyList.get(positionLarge)) > -1 * total_sum.get(keyList.get(positionSmall))) {
                     singleSplit.put(keyList.get(positionLarge), total_sum.get(keyList.get(positionSmall)) * -1);
@@ -242,16 +245,13 @@ public class TransactionController {
                     singleSplit.put(keyList.get(positionSmall), total_sum.get(keyList.get(positionLarge)) * -1);
                 }
 
-//            System.out.println("user split");
                 userBalance.add(singleSplit);
-//            System.out.println(userBalance);
                 total_sum.remove(keyList.get(positionLarge));
                 total_sum.remove(keyList.get(positionSmall));
                 if (total_sum.size() == 1) {
                     String onlyKey = total_sum.keySet().iterator().next();
                     Float value1 = total_sum.get(onlyKey);
                     if (value1 == 0) {
-//                    System.out.println("into this");
                         break;
                     }
                 }
@@ -263,7 +263,6 @@ public class TransactionController {
                 } else if (largest < smallest * -1) {
                     total_sum.put(keyList.get(positionSmall), value);
                 }
-//            System.out.println(total_sum);
             }
             List<Map<String, String>> finalList = new ArrayList<>();
             for (Map<String, Float> map : userBalance) {
@@ -281,17 +280,57 @@ public class TransactionController {
                     }
 
                 }
-//            System.out.println(userBalanceMap);
                 finalList.add(userBalanceMap);
-//            System.out.println(finalList);
             }
             return ResponseEntity.ok(finalList);
-//            return (finalList);
         }
         catch (Exception e) {
+            String logMessage = stringLog.convertString(e);
+            logglyService.sendLog(logMessage);
             JSONObject jsonResponse = new JSONObject();
             jsonResponse.put("message", "Try Later");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(jsonResponse.toString());
         }
     }
+
+
+
+
+    @CrossOrigin
+    @GetMapping("/dashboard/group/{userId}")
+    @ResponseBody
+    public ResponseEntity<?> transactionsDashboard(@PathVariable String userId, @RequestParam LocalDateTime startDate, @RequestParam LocalDateTime endDate ) {
+    try {
+        List<Transaction> transaction1 = (transactionService.fetchTransactions(startDate, endDate, userId));
+        Map<String, Double> dict1 = new HashMap<>();
+
+        for (Transaction transaction : transaction1) {
+            // Initialize the map entry if it does not exist
+            if (!dict1.containsKey(transaction.getTransactionDescription())) {
+                dict1.put(transaction.getTransactionDescription(), 0.0);
+            }
+
+            for (Useramount userAmount : transaction.getUserSplit()) {
+                if (userAmount.getUserID().equals(userId)) {
+                    // Update the map with the accumulated balance
+                    dict1.put(transaction.getTransactionDescription(),
+                            dict1.get(transaction.getTransactionDescription()) + userAmount.getUserBalance());
+                }
+            }
+        }
+
+        // Log the dictionary to verify the results
+
+        return ResponseEntity.ok(dict1);
+    }
+    catch (Exception e) {
+        String logMessage = stringLog.convertString(e);
+        logglyService.sendLog(logMessage);
+        JSONObject jsonResponse = new JSONObject();
+        jsonResponse.put("message", "Try Later");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(jsonResponse.toString());
+    }
+    }
+
+
 }

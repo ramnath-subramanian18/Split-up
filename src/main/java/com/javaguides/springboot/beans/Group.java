@@ -19,6 +19,7 @@ public class Group {
     private List<Useramount> userAmounts;
     private String groupOwner;
     private String groupDescription;
+    private String groupType;
 
     @Override
     public String toString() {
@@ -33,11 +34,12 @@ public class Group {
     public Group() {
     }
 
-    public Group( String _id, String groupName, String groupOwner,String groupDescription,ArrayList<Useramount> userAmounts){
+    public Group( String _id, String groupName, String groupOwner,String groupDescription,ArrayList<Useramount> userAmounts,String groupType){
         this._id=_id;
         this.groupName=groupName;
         this.groupOwner=groupOwner;
         this.groupDescription=groupDescription;
         this.userAmounts= userAmounts;
+        this.groupType = groupType;
     }
 }

@@ -1,5 +1,9 @@
 package com.javaguides.springboot.Controller;
+import com.javaguides.springboot.Service.LogglyService;
+import com.javaguides.springboot.Service.StringLog;
 import com.fasterxml.jackson.databind.JsonSerializer;
+import com.javaguides.springboot.Service.LogglyService;
+import com.javaguides.springboot.Service.StringLog;
 import com.javaguides.springboot.beans.Group;
 import com.javaguides.springboot.beans.User;
 import com.javaguides.springboot.beans.Useramount;
@@ -18,6 +22,7 @@ import java.util.*;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
 import javax.swing.text.html.Option;
+import javax.swing.text.html.StyleSheet;
 //import com.javaguides.springboot.beans.UserAmount;
 
 //import static jdk.nio.zipfs.ZipFileAttributeView.AttrID.group;
@@ -30,49 +35,36 @@ public class GroupController {
     private UserRepository userRepository;
     @Autowired
     private MongoTemplate mongoTemplate;
+
+    @Autowired
+    private LogglyService logglyService;
+    @Autowired
+    private StringLog stringLog;
+
     //Create a group
     @CrossOrigin
     @PostMapping(value = "/groups", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> createGroup(@RequestBody Group group) {
-        System.out.println(":grouping123");
-        System.out.println(group);
         try {
             Optional<User> userOptional1 = userRepository.findById(group.getUserAmounts().get(0).getUserID());
-            System.out.println("userOptional1");
-            System.out.println(userOptional1);
             if (userOptional1.isPresent()) {
-                System.out.println(userOptional1);
                 User user = userOptional1.get();
-
                 List<String> userGroup = user.getUserGroup();
-                System.out.println("usergroup");
-                System.out.println(userGroup);
-
                 if (userGroup == null) {
                     userGroup = new ArrayList<>();
                     user.setUserGroup(userGroup);
                 }
 
-                    System.out.println("into if loop");
                     for (String groupID : userGroup) {
-                        System.out.println(groupRepository.findById(groupID).get().getGroupName());
                         if (groupRepository.findById(groupID).get().getGroupName().equals(group.getGroupName())) {
                             JSONObject jsonResponse = new JSONObject();
                             jsonResponse.put("message", "Group already Exists");
                             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonResponse.toString());
                         }
                     }
-
-
-
-                System.out.println("for loop over");
                 groupRepository.save(group);
-                System.out.println("saved success");
                 String groupIDSingle = group.get_id();
-                System.out.println("here12345");
-                System.out.println(groupIDSingle);
                 String userID = group.getUserAmounts().get(0).getUserID();
-                System.out.println(userID);
                 Optional<User> userOptional = userRepository.findById(userID);
 
                 if (userOptional.isPresent()) {
@@ -87,6 +79,8 @@ public class GroupController {
             }
         }
         catch (Exception e) {
+            String logMessage = stringLog.convertString(e);
+            logglyService.sendLog(logMessage);
             e.printStackTrace();
             JSONObject jsonResponse = new JSONObject();
             jsonResponse.put("message", "Try Later");
@@ -98,10 +92,10 @@ public class GroupController {
     @CrossOrigin
     @PutMapping(value = "/groups", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> editGroup(@RequestBody Map<String, String> requestBody) {
-        System.out.print("into the put for group");
         try {
             String emailId = requestBody.get("emailId");
             String groupID = requestBody.get("groupID");
+            String userName=requestBody.get("userName");
 
             if (emailId == null || emailId.isEmpty() || groupID == null || groupID.isEmpty()) {
                 JSONObject jsonResponse = new JSONObject();
@@ -110,14 +104,11 @@ public class GroupController {
             }
 
             User user = userRepository.findByuserEmail(emailId);
-            System.out.println(user);
             if (user == null) {
                 JSONObject jsonResponse = new JSONObject();
                 jsonResponse.put("message", "User not found with email: " + emailId);
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonResponse.toString());
             } else {
-                System.out.print("into the else partf");
-                System.out.println(user.get_id());
 
                 Optional<Group> optionalGroup = groupRepository.findById(groupID);
                 if (optionalGroup.isPresent()) {
@@ -136,7 +127,7 @@ public class GroupController {
                     String userId = user.get_id().toString();
                     Float userBalance = 0.0F;
                     ArrayList<Useramount> useramountBeforeAppending = new ArrayList<>(group.getUserAmounts());
-                    useramountBeforeAppending.add(new Useramount(userId, userBalance));
+                    useramountBeforeAppending.add(new Useramount(userId, userName,userBalance));
                     group.setUserAmounts(useramountBeforeAppending);
                     groupRepository.save(group);
 
@@ -164,6 +155,8 @@ public class GroupController {
                 }
             }
         } catch (Exception e) {
+            String logMessage = stringLog.convertString(e);
+            logglyService.sendLog(logMessage);
             e.printStackTrace();
             JSONObject jsonResponse = new JSONObject();
             jsonResponse.put("message", "Try Later");
@@ -176,45 +169,61 @@ public class GroupController {
     @CrossOrigin
     @GetMapping("/groups/userID/{groupID}")
     @ResponseBody
-    public ResponseEntity<?> listGroup(@PathVariable String groupID ) {
+    public ResponseEntity<?> listGroup(@PathVariable String groupID) {
         try {
-            Optional<Group> group = groupRepository.findById(groupID);
-            System.out.println("groupinmg");
-            System.out.println(group);
-            if (!group.isPresent()) {
+            // Fetch the group once
+            Optional<Group> groupOpt = groupRepository.findById(groupID);
+
+            if (!groupOpt.isPresent()) {
                 JSONObject jsonResponse = new JSONObject();
-                jsonResponse.put("message", "Group name is not present");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonResponse.toString());
+                jsonResponse.put("message", "Group not found");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(jsonResponse.toString());
             }
-            HashMap allDetailsGroup = new HashMap();
-            List<HashMap<String, String>> allUserAmountsName = new ArrayList<HashMap<String, String>>();
-            for (Useramount eachUserBalance : group.get().getUserAmounts()) {
-                System.out.println("eachUserBalance");
-                System.out.println(eachUserBalance);
-                String userName = (userRepository.findById(eachUserBalance.getUserID()).get().getUserName());
-                HashMap userAmountsName = new HashMap();
-                userAmountsName.put("userID", eachUserBalance.getUserID());
-                userAmountsName.put("userBalance", eachUserBalance.getUserBalance());
-                userAmountsName.put("userName", userName);
-                allUserAmountsName.add(userAmountsName);
-                System.out.println(allUserAmountsName);
+            else{
+                return ResponseEntity.ok(groupOpt);
             }
-            System.out.println("for loop completed");
-            allDetailsGroup.put("_id", group.get().getGroupName());
-            allDetailsGroup.put("groupName", group.get().getGroupName());
-            allDetailsGroup.put("userAmounts", allUserAmountsName);
-            allDetailsGroup.put("groupOwner", group.get().getGroupOwner());
-            allDetailsGroup.put("groupDescription", group.get().getGroupOwner());
-            System.out.println(allDetailsGroup);
-            return ResponseEntity.ok(allDetailsGroup);
-        }
-        catch (Exception e) {
+//            Group group = groupOpt.get();
+//            List<Useramount> userAmounts = group.getUserAmounts();
+//
+//            // Use a map to store user details to avoid multiple DB calls
+//            Map<String, String> userMap = new HashMap<>();
+//            for (Useramount eachUserBalance : userAmounts) {
+//                Optional<User> userOpt = userRepository.findById(eachUserBalance.getUserID());
+//                if (userOpt.isPresent()) {
+//                    User user = userOpt.get();
+//                    userMap.put(eachUserBalance.getUserID(), user.getUserName());
+//                } else {
+//                    userMap.put(eachUserBalance.getUserID(), "Unknown"); // Handle user not found
+//                }
+//            }
+//
+//            // Build the user amounts list
+//            List<Map<String, String>> allUserAmountsName = new ArrayList<>();
+//            for (Useramount eachUserBalance : userAmounts) {
+//                Map<String, String> userAmountsName = new HashMap<>();
+//                userAmountsName.put("userID", eachUserBalance.getUserID());
+//                userAmountsName.put("userBalance", eachUserBalance.getUserBalance().toString());
+//                userAmountsName.put("userName", userMap.getOrDefault(eachUserBalance.getUserID(), "Unknown"));
+//                allUserAmountsName.add(userAmountsName);
+//            }
+//
+//            // Build the response map
+//            Map<String, Object> allDetailsGroup = new HashMap<>();
+//            allDetailsGroup.put("userAmounts", allUserAmountsName);
+//            allDetailsGroup.put("_id", group.getGroupName());
+//            allDetailsGroup.put("groupName", group.getGroupName());
+//            allDetailsGroup.put("groupOwner", group.getGroupOwner());
+//            allDetailsGroup.put("groupDescription", group.getGroupDescription()); // Fixed: should be getGroupDescription
+//
+//            return ResponseEntity.ok(allDetailsGroup);
+        } catch (Exception e) {
+            String logMessage = stringLog.convertString(e);
+            logglyService.sendLog(logMessage);
             e.printStackTrace();
             JSONObject jsonResponse = new JSONObject();
             jsonResponse.put("message", "Try Later");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(jsonResponse.toString());
         }
-
     }
 
 
@@ -232,14 +241,13 @@ public class GroupController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonResponse.toString());
             } else {
                 List<Object> allGroupUser = new ArrayList<>();
+
                 for (Group i : groupRepository.findByuserAmounts(userID)) {
                     Map<String, String> singleGroupUser = new HashMap<>();
                     singleGroupUser.put("name", i.getGroupName());
                     singleGroupUser.put("id", i.get_id());
-
+                    singleGroupUser.put("type",i.getGroupType());
                     for (Useramount userAmount : i.getUserAmounts()) {
-
-                        System.out.println(userAmount.getUserBalance());
                         if (userID.equals(userAmount.getUserID())) {
                             singleGroupUser.put("balance", userAmount.getUserBalance().toString());
                         }
@@ -250,6 +258,8 @@ public class GroupController {
             }
         }
         catch (Exception e) {
+            String logMessage = stringLog.convertString(e);
+            logglyService.sendLog(logMessage);
             e.printStackTrace();
             JSONObject jsonResponse = new JSONObject();
             jsonResponse.put("message", "Try Later");
@@ -275,6 +285,8 @@ public class GroupController {
             }
         }
         catch (Exception e) {
+            String logMessage = stringLog.convertString(e);
+            logglyService.sendLog(logMessage);
             e.printStackTrace();
             JSONObject jsonResponse = new JSONObject();
             jsonResponse.put("message", "Try Later");
