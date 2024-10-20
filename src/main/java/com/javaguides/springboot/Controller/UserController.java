@@ -34,7 +34,8 @@ public class UserController {
     @CrossOrigin
     @GetMapping("/testing")
     public String testing() {
-        return "testing";
+        System.out.println("testing123");
+        return "testing123";
     }
 
 

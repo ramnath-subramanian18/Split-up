@@ -8,7 +8,7 @@ WORKDIR /app
 COPY target/springboot-0.0.1-SNAPSHOT.jar app.jar
 
 # Expose the port that your Spring Boot application will run on
-EXPOSE 8080
+EXPOSE 8093
 
 # Run the JAR file
 ENTRYPOINT ["java", "-jar", "app.jar"]

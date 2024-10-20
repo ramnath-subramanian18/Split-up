@@ -38,7 +38,7 @@ public class TransactionController {
     private StringLog stringLog;
     @GetMapping("/health")
     public String health() {
-        return "OK";
+        return "OK123";
     }
     //Send post request to save a transaction
     @CrossOrigin
